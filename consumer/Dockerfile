@@ -1,4 +1,4 @@
-FROM golang:1.8.1-alpine
+FROM golang:1.8.1-alpine as builder
 
 RUN apk update && apk upgrade && apk add --no-cache bash git
 
@@ -9,7 +9,8 @@ COPY . ${SOURCES}
 
 RUN cd ${SOURCES}consumer/ && CGO_ENABLED=0 go build
 
+FROM scratch 
 ENV BROKER_ADDR amqp://guest:guest@localhost:5672/
+COPY --from=builder /go/src/github.com/ciaranRoche/rabbitmq-docker/consumer/consumer /go/src/github.com/ciaranRoche/rabbitmq-docker/consumer/consumer
 
-WORKDIR ${SOURCES}consumer/
-CMD ${SOURCES}consumer/consumer
+ENTRYPOINT [ "/go/src/github.com/ciaranRoche/rabbitmq-docker/consumer/consumer" ]
